@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ReactMarkdown from "react-markdown"; // Import react-markdown
 
 type Message = { text: string; sender: "user" | "bot" };
 
@@ -29,7 +30,7 @@ export default function Home() {
       }
 
       const data = await response.json();
-      const botReply = data?.reply?.trim() || "I'm not sure how to respond.";
+      const botReply = data?.response?.trim() || "I'm not sure how to respond.";
       const botMessage: Message = { text: botReply, sender: "bot" };
 
       setMessages((prev) => [...prev, botMessage]);
@@ -52,7 +53,11 @@ export default function Home() {
                 msg.sender === "user" ? "bg-blue-500 text-white text-right" : "bg-gray-200 text-black text-left"
               }`}
             >
-              {msg.text}
+              {msg.sender === "bot" ? (
+                <ReactMarkdown>{msg.text}</ReactMarkdown> // Render bot messages as Markdown
+              ) : (
+                msg.text // Render user messages as plain text
+              )}
             </div>
           ))}
         </div>
