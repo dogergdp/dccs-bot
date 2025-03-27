@@ -14,9 +14,9 @@ const genAI = new GoogleGenerativeAI(apiKey);
 const fileManager = new GoogleAIFileManager(apiKey);
 
 // Cache for uploaded files
-let cachedFiles = [];
+let cachedFiles: { mimeType: string; fileUri: string }[] = [];
 
-async function uploadToGemini(path, mimeType) {
+async function uploadToGemini(path: string, mimeType: string) {
   const uploadResult = await fileManager.uploadFile(path, {
     mimeType,
     displayName: path,
@@ -26,9 +26,9 @@ async function uploadToGemini(path, mimeType) {
   return file;
 }
 
-async function waitForFilesActive(files) {
+async function waitForFilesActive(files: { name: string }[]) {
   console.log("Waiting for file processing...");
-  for (const name of files.map((file) => file.name)) {
+  for (const name of files.map((file: { name: string }) => file.name)) {
     let file = await fileManager.getFile(name);
     while (file.state === "PROCESSING") {
       process.stdout.write(".");
@@ -63,6 +63,7 @@ async function initializeFiles() {
       await uploadToGemini("public\\Context\\Extra.md", "text/markdown"),
       await uploadToGemini("public\\Context\\Philosophy-Mission-Vision.md", "text/markdown"),
       await uploadToGemini("public\\Context\\Initial.md", "text/markdown"),
+      await uploadToGemini("public\\Context\\Admission.md", "text/markdown"),
     ];
 
     await waitForFilesActive(files);
@@ -74,7 +75,7 @@ async function initializeFiles() {
   }
 }
 
-async function run(userInput) {
+async function run(userInput: string) {
   await initializeFiles();
 
   const chatSession = model.startChat({
@@ -82,14 +83,19 @@ async function run(userInput) {
     history: [
       {
         role: "user",
-        parts: cachedFiles.map((file) => ({
-          fileData: { mimeType: file.mimeType, fileUri: file.fileUri },
-        })).concat({ text: "follow these" }),
+        parts: [
+          ...cachedFiles.map((file) => ({
+            fileData: { mimeType: file.mimeType, fileUri: file.fileUri },
+          })),
+          { text: "follow these" }, // Add this as a separate object
+        ],
       },
       {
         role: "model",
         parts: [
-          { text: "Hello! I am Carlo, the official chatbot for Don Carlo Cavina School. How may I help you with school-related information?\n" },
+          {
+            text: "Hello! I am Carlo, the official chatbot for Don Carlo Cavina School. How may I help you with school-related information?\n",
+          },
         ],
       },
       {
@@ -107,7 +113,7 @@ async function run(userInput) {
 }
 
 // Export the POST method for Next.js
-export async function POST(req) {
+export async function POST(req: Request) {
   try {
     const { message } = await req.json(); // Extract user input from the request body
     if (!message) {
@@ -117,7 +123,7 @@ export async function POST(req) {
     const response = await run(message);
     return NextResponse.json({ response });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(error instanceof Error ? error.message : "Unknown error");
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
   }
 }
