@@ -184,22 +184,40 @@ export default function Home() {
 
 
 
-        <div className="flex mt-2 text-grey-700">
+        <div className="flex mt-2 text-gray-700">
           <input
             type="text"
-            className="flex-1 p-3 rounded-l-lg focus:outline-none bg-gray-200"
+            className="flex-1 p-3 rounded-l-2xl focus:outline-none bg-gray-200"
             placeholder="Type a message..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown} // Handle Enter key
+            onKeyDown={handleKeyDown}
             disabled={loading}
           />
           <button
-            className="bg-emerald-700 text-white px-4 py-2 rounded-r-lg disabled:opacity-50"
+            className="bg-emerald-700 text-white px-4 py-2 rounded-r-2xl hover:bg-emerald-600 disabled:opacity-50 flex items-center justify-center"
             onClick={sendMessage}
             disabled={loading}
           >
-            {loading ? "..." : "Send"}
+            {loading ? (
+              "..."
+            ) : (
+              <svg
+                className="w-6 h-6 text-white rotate-90" // Rotate the icon using Tailwind
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M12 2a1 1 0 0 1 .932.638l7 18a1 1 0 0 1-1.326 1.281L13 19.517V13a1 1 0 1 0-2 0v6.517l-5.606 2.402a1 1 0 0 1-1.326-1.281l7-18A1 1 0 0 1 12 2Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
           </button>
         </div>
       </div>
