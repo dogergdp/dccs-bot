@@ -64,6 +64,13 @@ async function initializeFiles() {
       await uploadToGemini("public\\Context\\Philosophy-Mission-Vision.md", "text/markdown"),
       await uploadToGemini("public\\Context\\Initial.md", "text/markdown"),
       await uploadToGemini("public\\Context\\Admission.md", "text/markdown"),
+      await uploadToGemini("public\\Context\\PART III. SCHOOL OFFICIALS, STUDENT SERVICES, AND FACILITIES.pdf", "application/pdf"),
+      await uploadToGemini("public\\Context\\PART IV_ POLICIES, REGULATIONS, AND GUIDELINES ON ADMISSION.pdf", "application/pdf"),
+      await uploadToGemini("public\\Context\\PART V_ ACADEMIC AND INSTRUCTIONAL PROGRAM GUIDELINES.pdf", "application/pdf"),
+      await uploadToGemini("public\\Context\\PART VI_ POLICIES ON RULES IN DEPORTMENT AND DISCIPLINE.pdf", "application/pdf"),
+      await uploadToGemini("public\\Context\\PART VII_ POLICIES ON STUDENT ACTIVITIES.pdf", "application/pdf"),
+      await uploadToGemini("public\\Context\\PART VIII_ GENERAL INFORMATION.pdf", "application/pdf"),
+
     ];
 
     await waitForFilesActive(files);

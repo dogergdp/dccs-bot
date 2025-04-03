@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown"; // Import react-markdown
+import remarkGfm from "remark-gfm"; // Import remark-gfm for GitHub Flavored Markdown
 
 type Message = { text: string; sender: "user" | "bot" };
 
@@ -93,8 +94,6 @@ export default function Home() {
       </div>
       <div className="max-w w-full p-4 rounded-4xl shadow-md bg-gray-50">
         <div className="h-80 overflow-y-auto p-2 border-b border-gray-300">
-          
-          
           {messages.map((msg, index) => (
             <div
               key={index}
@@ -102,8 +101,7 @@ export default function Home() {
                 msg.sender === "user" ? "justify-end" : "justify-start"
               }`}
             >
-              
-              {/* Bot Icon*/}
+              {/* Bot Icon */}
               {msg.sender === "bot" && (
                 <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-2">
                   <svg
@@ -124,9 +122,7 @@ export default function Home() {
                 </div>
               )}
 
-
-
-              {/* Message*/}
+              {/* Message */}
               <div
                 className={`relative max-w-1/2 p-3 rounded-lg text-sm ${
                   msg.sender === "user"
@@ -138,7 +134,16 @@ export default function Home() {
                 }}
               >
                 {msg.sender === "bot" ? (
-                  <ReactMarkdown>{msg.text}</ReactMarkdown> // Render bot messages as Markdown
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]} // Enable GitHub Flavored Markdown
+                    components={{
+                      ul: ({ children }) => <ul className="list-disc list-inside ml-4">{children}</ul>,
+                      ol: ({ children }) => <ol className="list-decimal list-inside ml-4">{children}</ol>,
+                      li: ({ children }) => <li className="mb-1">{children}</li>,
+                    }}
+                  >
+                    {msg.text}
+                  </ReactMarkdown>
                 ) : (
                   msg.text // Render user messages as plain text
                 )}
@@ -151,8 +156,7 @@ export default function Home() {
                 />
               </div>
 
-
-              {/* User Icon*/}
+              {/* User Icon */}
               {msg.sender === "user" && (
                 <div className="w-8 h-8 bg-emerald-700 rounded-full flex items-center justify-center ml-2">
                   <svg
@@ -164,7 +168,7 @@ export default function Home() {
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path className="bg-grey"
+                    <path
                       fillRule="evenodd"
                       d="M12 20a7.966 7.966 0 0 1-5.002-1.756l.002.001v-.683c0-1.794 1.492-3.25 3.333-3.25h3.334c1.84 0 3.333 1.456 3.333 3.25v.683A7.966 7.966 0 0 1 12 20ZM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10c0 5.5-4.44 9.963-9.932 10h-.138C6.438 21.962 2 17.5 2 12Zm10-5c-1.84 0-3.333 1.455-3.333 3.25S10.159 13.5 12 13.5c1.84 0 3.333-1.455 3.333-3.25S13.841 7 12 7Z"
                       clipRule="evenodd"
@@ -175,14 +179,8 @@ export default function Home() {
             </div>
           ))}
 
-
           <div ref={messagesEndRef} /> {/* Scroll to this element */}
         </div>
-
-
-
-
-
 
         <div className="flex mt-2 text-gray-700">
           <input
