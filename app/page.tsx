@@ -1,15 +1,23 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import ReactMarkdown from "react-markdown"; // Import react-markdown
+import { motion } from "framer-motion"; // Import Framer Motion
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import dynamic from "next/dynamic";
+
+// Dynamically import the Lottie Player with SSR disabled
+const Player = dynamic(() => import("@lottiefiles/react-lottie-player").then((mod) => mod.Player), {
+  ssr: false,
+});
 
 type Message = { text: string; sender: "user" | "bot" };
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(true); // Start with loading true to wait for chatbot initialization
-  const messagesEndRef = useRef<HTMLDivElement>(null); // Ref to scroll to the bottom
+  const [loading, setLoading] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to the bottom whenever messages change
   useEffect(() => {
@@ -23,7 +31,7 @@ export default function Home() {
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: "initialize" }), // Special message to initialize the chatbot
+          body: JSON.stringify({ message: "initialize" }),
         });
 
         if (!response.ok) {
@@ -34,12 +42,12 @@ export default function Home() {
         const botReply = data?.response?.trim() || "Hello! How can I assist you today?";
         const botMessage: Message = { text: botReply, sender: "bot" };
 
-        setMessages([botMessage]); // Set the initial chatbot message
+        setMessages([botMessage]);
       } catch (error) {
         console.error("Error initializing chatbot:", error);
         setMessages([{ text: "Error initializing chatbot.", sender: "bot" }]);
       } finally {
-        setLoading(false); // Allow user interaction after initialization
+        setLoading(false);
       }
     };
 
@@ -88,45 +96,43 @@ export default function Home() {
   return (
     <div className="min-h-screen flex items-center justify-between px-10 bg-emerald-800 font-poppins">
       <div className="text-white">
-        <h1 className="text-5xl font-bold mb-4 shadow-emerald-950">DCCS Carlo Bot</h1>
-        <p className="text-lg font-medium">Your school assistant chatbot</p>
+        {/* Lottie Animation */}
+        <Player
+          autoplay
+          loop
+          src="/Animation - 1743677201415.json" 
+          style={{ height: "250px", width: "250px" }}
+        />
+
+        {/* Title */}
+        <h1 className="text-5xl font-extrabold mb-4 ml-3 shadow-emerald-950">DCCS Carlo Bot</h1>
+        <p className="text-lg ml-3 font-medium">Your school assistant chatbot. Ask me anything about Don Carlo Cavina School!</p>
+        <p className="text-lg ml-3 font-bold">by Franz Perex (BSCS-3A)</p>
       </div>
       <div className="max-w w-full p-4 rounded-4xl shadow-md bg-gray-50">
         <div className="h-80 overflow-y-auto p-2 border-b border-gray-300">
-          
-          
           {messages.map((msg, index) => (
-            <div
+            <motion.div
               key={index}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
               className={`flex items-end my-2 ${
                 msg.sender === "user" ? "justify-end" : "justify-start"
               }`}
             >
-              
-              {/* Bot Icon*/}
+              {/* Bot Icon */}
               {msg.sender === "bot" && (
                 <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-2">
-                  <svg
-                    className="w-6 h-6 text-gray-800 dark:text-white"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M12 20a7.966 7.966 0 0 1-5.002-1.756l.002.001v-.683c0-1.794 1.492-3.25 3.333-3.25h3.334c1.84 0 3.333 1.456 3.333 3.25v.683A7.966 7.966 0 0 1 12 20ZM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10c0 5.5-4.44 9.963-9.932 10h-.138C6.438 21.962 2 17.5 2 12Zm10-5c-1.84 0-3.333 1.455-3.333 3.25S10.159 13.5 12 13.5c1.84 0 3.333-1.455 3.333-3.25S13.841 7 12 7Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <img
+                    src="/dccs_logo.png"
+                    alt="Bot Icon"
+                    className="w-6 h-6 mix-blend-multiply"
+                  />
                 </div>
               )}
 
-
-
-              {/* Message*/}
+              {/* Message */}
               <div
                 className={`relative max-w-1/2 p-3 rounded-lg text-sm ${
                   msg.sender === "user"
@@ -138,9 +144,18 @@ export default function Home() {
                 }}
               >
                 {msg.sender === "bot" ? (
-                  <ReactMarkdown>{msg.text}</ReactMarkdown> // Render bot messages as Markdown
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      ul: ({ children }) => <ul className="list-disc list-inside ml-4">{children}</ul>,
+                      ol: ({ children }) => <ol className="list-decimal list-inside ml-4">{children}</ol>,
+                      li: ({ children }) => <li className="mb-1">{children}</li>,
+                    }}
+                  >
+                    {msg.text}
+                  </ReactMarkdown>
                 ) : (
-                  msg.text // Render user messages as plain text
+                  msg.text
                 )}
                 <div
                   className={`absolute w-0 h-0 border-t-8 border-l-8 border-transparent ${
@@ -150,39 +165,11 @@ export default function Home() {
                   }`}
                 />
               </div>
-
-
-              {/* User Icon*/}
-              {msg.sender === "user" && (
-                <div className="w-8 h-8 bg-emerald-700 rounded-full flex items-center justify-center ml-2">
-                  <svg
-                    className="w-6 h-6 text-gray-800 dark:text-white"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path className="bg-grey"
-                      fillRule="evenodd"
-                      d="M12 20a7.966 7.966 0 0 1-5.002-1.756l.002.001v-.683c0-1.794 1.492-3.25 3.333-3.25h3.334c1.84 0 3.333 1.456 3.333 3.25v.683A7.966 7.966 0 0 1 12 20ZM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10c0 5.5-4.44 9.963-9.932 10h-.138C6.438 21.962 2 17.5 2 12Zm10-5c-1.84 0-3.333 1.455-3.333 3.25S10.159 13.5 12 13.5c1.84 0 3.333-1.455 3.333-3.25S13.841 7 12 7Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              )}
-            </div>
+            </motion.div>
           ))}
 
-
-          <div ref={messagesEndRef} /> {/* Scroll to this element */}
+          <div ref={messagesEndRef} />
         </div>
-
-
-
-
-
 
         <div className="flex mt-2 text-gray-700">
           <input
@@ -203,7 +190,7 @@ export default function Home() {
               "..."
             ) : (
               <svg
-                className="w-6 h-6 text-white rotate-90" // Rotate the icon using Tailwind
+                className="w-6 h-6 text-white rotate-90"
                 aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
