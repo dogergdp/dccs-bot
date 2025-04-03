@@ -19,6 +19,14 @@
   }
 }
 
+
+@font-face {
+  font-family: 'Poppins';
+  src: url('/fonts/Poppins-Regular.ttf') format('truetype');
+  font-weight: 400; /* Regular weight */
+  font-style: normal;
+}
+
 body {
   background: linear-gradient(-65deg, #056839, #cee7dc, #7ad4bf);
   background-size: 400% 400%;
