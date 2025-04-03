@@ -16,7 +16,8 @@ type Message = { text: string; sender: "user" | "bot" };
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // For chatbot responses
+  const [uploading, setUploading] = useState(false); // For file uploads
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to the bottom whenever messages change
@@ -27,6 +28,7 @@ export default function Home() {
   // Initialize chatbot and send the first message
   useEffect(() => {
     const initializeChatbot = async () => {
+      setUploading(true); // Show full-screen loading screen during initialization
       try {
         const response = await fetch("/api/chat", {
           method: "POST",
@@ -47,7 +49,7 @@ export default function Home() {
         console.error("Error initializing chatbot:", error);
         setMessages([{ text: "Error initializing chatbot.", sender: "bot" }]);
       } finally {
-        setLoading(false);
+        setUploading(false); // Hide the full-screen loading screen after initialization
       }
     };
 
@@ -60,7 +62,7 @@ export default function Home() {
     const userMessage: Message = { text: input, sender: "user" };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
-    setLoading(true);
+    setLoading(true); // Show small loading indicator for chatbot response
 
     try {
       const response = await fetch("/api/chat", {
@@ -82,7 +84,7 @@ export default function Home() {
       console.error("Error:", error);
       setMessages((prev) => [...prev, { text: "Error connecting to the server.", sender: "bot" }]);
     } finally {
-      setLoading(false);
+      setLoading(false); // Hide the small loading indicator after processing
     }
   };
 
@@ -94,22 +96,57 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-between px-10 bg-emerald-800 font-poppins">
+
+    <div className="relative min-h-screen flex items-center justify-between gap-x-10 px-10 font-poppins bg-emerald-800">
+      
+      
+      {/* Full-Screen Loading Screen for File Uploads */}
+      {uploading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <Player
+            autoplay
+            loop
+            src="/Animation - 1743677201415.json"
+            style={{ height: "200px", width: "200px" }}
+          />
+          <p className="text-white text-xl mt-4">Waking Up Carlo...</p>
+        </div>
+      )}
+      
+      <a href="https://www.doncarlocavinaschool.com/" target="_blank" rel="noopener noreferrer">
+      <div>
+        <img
+          src="/DCCS LOGO.ico"
+          alt="DCCS Logo"
+          className="absolute left-12 z-0 top-3 w-10 h-10 drop-shadow-lg"
+        />
+        <p className="absolute left-26 z-0 top-5 text-m font-bold text-white drop-shadow-lg">
+          Don Carlo Cavina School
+        </p>
+      </div>
+      </a>
+      
+      {/* Main Content */}
       <div className="text-white">
         {/* Lottie Animation */}
         <Player
           autoplay
           loop
-          src="/Animation - 1743677201415.json" 
-          style={{ height: "250px", width: "250px" }}
+          src="/Animation - 1743677201415.json"
+          style={{ height: "275px", width: "275px" }}
+          className="drop-shadow-lg ml-1"
         />
 
         {/* Title */}
-        <h1 className="text-5xl font-extrabold mb-4 ml-3 shadow-emerald-950">DCCS Carlo Bot</h1>
-        <p className="text-lg ml-3 font-medium">Your school assistant chatbot. Ask me anything about Don Carlo Cavina School!</p>
-        <p className="text-lg ml-3 font-bold">by Franz Perex (BSCS-3A)</p>
+        <h1 className="text-5xl font-extrabold mb-4 ml-3 shadow-emerald-950 drop-shadow-lg text-center">
+          Carlo Bot
+        </h1>
+        <p className="text-lg ml-3 font-medium drop-shadow-lg">
+          Your school assistant chatbot. Ask me anything about Don Carlo Cavina School!
+        </p>
+        <p className="text-lg ml-3 font-bold drop-shadow-lg">by Franz Perez (BSCS-3A)</p>
       </div>
-      <div className="max-w w-full p-4 rounded-4xl shadow-md bg-gray-50">
+      <div className="max-w w-full p-4 rounded-4xl shadow-md bg-gray-50 drop-shadow-lg">
         <div className="h-80 overflow-y-auto p-2 border-b border-gray-300">
           {messages.map((msg, index) => (
             <motion.div
@@ -179,15 +216,15 @@ export default function Home() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            disabled={loading}
+            disabled={loading || uploading}
           />
           <button
             className="bg-emerald-700 text-white px-4 py-2 rounded-r-2xl hover:bg-emerald-600 disabled:opacity-50 flex items-center justify-center"
             onClick={sendMessage}
-            disabled={loading}
+            disabled={loading || uploading}
           >
             {loading ? (
-              "..."
+              <span className="loader" /> // Add a small spinner or dots here
             ) : (
               <svg
                 className="w-6 h-6 text-white rotate-90"

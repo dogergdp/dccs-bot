@@ -13,8 +13,8 @@ const apiKey = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
 const fileManager = new GoogleAIFileManager(apiKey);
 
-// Cache for uploaded files
 let cachedFiles: { mimeType: string; fileUri: string }[] = [];
+let isUploading = false; // Track the file upload process
 
 async function uploadToGemini(path: string, mimeType: string) {
   const uploadResult = await fileManager.uploadFile(path, {
@@ -57,28 +57,32 @@ const generationConfig = {
 
 async function initializeFiles() {
   if (cachedFiles.length === 0) {
-    const files = [
-      await uploadToGemini("public\\Context\\Contacts.md", "text/markdown"),
-      await uploadToGemini("public\\Context\\Personnel.md", "text/markdown"),
-      await uploadToGemini("public\\Context\\Extra.md", "text/markdown"),
-      await uploadToGemini("public\\Context\\Philosophy-Mission-Vision.md", "text/markdown"),
-      await uploadToGemini("public\\Context\\Initial.md", "text/markdown"),
-      await uploadToGemini("public\\Context\\Admission.md", "text/markdown"),
-      await uploadToGemini("public\\Context\\PART III. SCHOOL OFFICIALS, STUDENT SERVICES, AND FACILITIES.pdf", "application/pdf"),
-      await uploadToGemini("public\\Context\\PART IV_ POLICIES, REGULATIONS, AND GUIDELINES ON ADMISSION.pdf", "application/pdf"),
-      await uploadToGemini("public\\Context\\PART V_ ACADEMIC AND INSTRUCTIONAL PROGRAM GUIDELINES.pdf", "application/pdf"),
-      await uploadToGemini("public\\Context\\PART VI_ POLICIES ON RULES IN DEPORTMENT AND DISCIPLINE.pdf", "application/pdf"),
-      await uploadToGemini("public\\Context\\PART VII_ POLICIES ON STUDENT ACTIVITIES.pdf", "application/pdf"),
-      await uploadToGemini("public\\Context\\PART VIII_ GENERAL INFORMATION.pdf", "application/pdf"),
+    isUploading = true; // Set uploading to true when file uploads start
+    try {
+      const files = [
+        await uploadToGemini("public\\Context\\Contacts.md", "text/markdown"),
+        await uploadToGemini("public\\Context\\Personnel.md", "text/markdown"),
+        await uploadToGemini("public\\Context\\Extra.md", "text/markdown"),
+        await uploadToGemini("public\\Context\\Philosophy-Mission-Vision.md", "text/markdown"),
+        await uploadToGemini("public\\Context\\Initial.md", "text/markdown"),
+        await uploadToGemini("public\\Context\\Admission.md", "text/markdown"),
+        await uploadToGemini("public\\Context\\PART III. SCHOOL OFFICIALS, STUDENT SERVICES, AND FACILITIES.pdf", "application/pdf"),
+        await uploadToGemini("public\\Context\\PART IV_ POLICIES, REGULATIONS, AND GUIDELINES ON ADMISSION.pdf", "application/pdf"),
+        await uploadToGemini("public\\Context\\PART V_ ACADEMIC AND INSTRUCTIONAL PROGRAM GUIDELINES.pdf", "application/pdf"),
+        await uploadToGemini("public\\Context\\PART VI_ POLICIES ON RULES IN DEPORTMENT AND DISCIPLINE.pdf", "application/pdf"),
+        await uploadToGemini("public\\Context\\PART VII_ POLICIES ON STUDENT ACTIVITIES.pdf", "application/pdf"),
+        await uploadToGemini("public\\Context\\PART VIII_ GENERAL INFORMATION.pdf", "application/pdf"),
+      ];
 
-    ];
+      await waitForFilesActive(files);
 
-    await waitForFilesActive(files);
-
-    cachedFiles = files.map((file) => ({
-      mimeType: file.mimeType,
-      fileUri: file.uri,
-    }));
+      cachedFiles = files.map((file) => ({
+        mimeType: file.mimeType,
+        fileUri: file.uri,
+      }));
+    } finally {
+      isUploading = false; // Set uploading to false when file uploads finish
+    }
   }
 }
 
@@ -125,6 +129,10 @@ export async function POST(req: Request) {
     const { message } = await req.json(); // Extract user input from the request body
     if (!message) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
+    }
+
+    if (isUploading) {
+      return NextResponse.json({ response: "Files are still being uploaded. Please wait..." });
     }
 
     const response = await run(message);
